@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
   }, true);
 
+  async function unpack() {
   try {
     const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
     const templateEl = document.querySelector('script[type="__bundler/template"]');
@@ -155,6 +156,44 @@ document.addEventListener('DOMContentLoaded', async function() {
     setStatus('Error unpacking: ' + err.message);
     console.error('Bundle unpack error:', err);
   }
+  }
+
+  // --- Password gate -------------------------------------------------------
+  // NOTE: this is a light-touch gate, not real security. The bundled content
+  // is embedded in this file, so a determined visitor can still read it from
+  // the page source. It keeps casual viewers out, nothing more.
+  const PASSWORD = 'Juno';
+  const gate = document.createElement('div');
+  gate.id = '__bundler_gate';
+  gate.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#faf9f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+  gate.innerHTML =
+    '<div style="text-align:center;background:#fff;padding:32px 36px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.12);max-width:300px;">' +
+      '<div style="font:600 22px/1.2 Georgia,serif;color:#CE5A43;margin-bottom:6px;">G&amp;J</div>' +
+      '<div style="font-size:14px;color:#666;margin-bottom:18px;">This page is password protected.</div>' +
+      '<input id="__gate_input" type="password" placeholder="Password" ' +
+        'style="width:100%;padding:10px 12px;font-size:15px;border:1px solid #ddd;border-radius:8px;outline:none;box-sizing:border-box;" />' +
+      '<div id="__gate_err" style="height:16px;font-size:12px;color:#CE5A43;margin:8px 0 0;"></div>' +
+      '<button id="__gate_btn" style="margin-top:10px;width:100%;padding:10px;font-size:15px;color:#fff;background:#8A9061;border:none;border-radius:8px;cursor:pointer;">Enter</button>' +
+    '</div>';
+  document.body.appendChild(gate);
+
+  const gateInput = gate.querySelector('#__gate_input');
+  const gateErr = gate.querySelector('#__gate_err');
+  const gateBtn = gate.querySelector('#__gate_btn');
+
+  function gateAttempt() {
+    if (gateInput.value === PASSWORD) {
+      gate.remove();
+      unpack();
+    } else {
+      gateErr.textContent = 'Incorrect password';
+      gateInput.value = '';
+      gateInput.focus();
+    }
+  }
+  gateBtn.addEventListener('click', gateAttempt);
+  gateInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') gateAttempt(); });
+  gateInput.focus();
 });
 
   </script>
