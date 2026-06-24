@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const gateBtn = gate.querySelector('#__gate_btn');
 
   function gateAttempt() {
-    if (gateInput.value === PASSWORD) {
+    if (gateInput.value.trim().toLowerCase() === PASSWORD.toLowerCase()) {
       gate.remove();
       unpack();
     } else {
